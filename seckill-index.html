@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+    <title>乐优商城--秒杀页面</title>
+    <link rel="icon" href="img/assets/img/favicon.ico">
+
+    <script src="./js/vue/vue.js"></script>
+    <script src="./js/vue/vuetify.js"></script>
+    <script src="./js/axios.min.js"></script>
+    <script src="./js/common.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/webbase.css"/>
+    <link rel="stylesheet" type="text/css" href="css/widget-jquery.autocomplete.css"/>
+    <link rel="stylesheet" type="text/css" href="css/pages-seckill-index.css"/>
+    <link rel="stylesheet" type="text/css" href="css/pages-list.css"/>
+    <link rel="stylesheet" type="text/css" href="css/widget-cartPanelView.css"/>
+
+    <style type="text/css">
+        .top-pagination {
+            display: block;
+            padding: 3px 15px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 18px;
+            color: #999;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, .5);
+            text-transform: uppercase;
+            float: right;
+            margin-top: 6px
+        }
+
+        .top-pagination span {
+            margin-right: 10px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- 头部栏位 -->
+<!--页面顶部，由js动态加载-->
+<script type="text/javascript" src="plugins/jquery/jquery.min.js"></script>
+<!--<div id="nav-bottom"></div>-->
+<!--<script type="text/javascript">$("#nav-bottom").load("top.html");</script>-->
+
+
+<script type="text/javascript" src="js/plugins/jquery/jquery.min.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $("#service").hover(function () {
+            $(".service").show();
+        }, function () {
+            $(".service").hide();
+        });
+        $("#shopcar").hover(function () {
+            $("#shopcarlist").show();
+        }, function () {
+            $("#shopcarlist").hide();
+        });
+
+    })
+</script>
+<script type="text/javascript" src="js/plugins/sui/sui.min.js"></script>
+<script type="text/javascript" src="js/widget/jquery.autocomplete.js"></script>
+<script type="text/javascript" src="js/widget/nav.js"></script>
+<script type="text/javascript" src="js/pages/seckill-index.js"></script>
+<script>
+    $(function () {
+        $("#code").hover(function () {
+            $(".erweima").show();
+        }, function () {
+            $(".erweima").hide();
+        });
+    })
+</script>
+</body>
+<div id="seckillIndexApp">
+    <div id="nav-bottom">
+        <ly-top/>
+    </div>
+    <div class="py-container index">
+        <!--banner-->
+        <div class="banner">
+            <img src="img/_/banner.png" class="img-responsive" alt="">
+        </div>
+        <div class="top-pagination">
+            <span>共 <i style="color: #222;">{{total}}+</i> 商品</span>
+            <span><i style="color: red;">{{search.page}}</i>/{{totalPage}}</span>
+            <a class="btn-arrow" href="#" style="display: inline-block"
+               @click.prevent="prePage">&lt;</a>
+            <a class="btn-arrow" href="#" style="display: inline-block"
+               @click.prevent="nextPage">&gt;</a>
+        </div>
+        <!--商品列表-->
+        <div class="goods-list">
+            <ul class="seckill" id="seckill">
+                <li class="seckill-item" v-for="(seckill,index) in seckillList" :key="seckill.id">
+                    <div class="pic">
+                        <img :src="seckill.images" alt=''>
+                    </div>
+                    <div class="intro"><span>{{seckill.title}}</span></div>
+                    <div class='price'><b class='sec-price'>￥{{ly.formatPrice(seckill.limitPrice)}}</b><b
+                            class='ever-price'>￥{{ly.formatPrice(seckill.price)}}</b></div>
+                    <div class='num'>
+                        <div>已售{{seckill.soldNum * 100 / seckill.quantity}}%</div>
+                        <div class='progress'>
+                            <div class='sui-progress progress-danger'><span
+                                    :style="{width: (seckill.soldNum * 100 / seckill.quantity)+'%'}" class='bar'></span>
+                            </div>
+                        </div>
+                        <div>剩余<b class='owned'>{{seckill.quantity - seckill.soldNum}}</b>件</div>
+                    </div>
+                    <a class='sui-btn btn-block btn-buy' :href="'/seckillItem/'+seckill.skuId+'.html'"
+                       target='_blank' v-if="new Date(seckill.endTime) - new Date().getTime() > 0">立即抢购</a>
+                    <a class='sui-btn btn-block btn-buy' style="background-color: grey" href="javascript:void(0)"
+                       onclick="return false" target='_blank' v-if="new Date(seckill.endTime) - new Date().getTime() < 0">秒杀已结束</a>
+                </li>
+            </ul>
+        </div>
+        <div class="cd-top">
+            <div class="top">
+                <img src="img/_/gotop.png"/>
+                <b>TOP</b>
+            </div>
+            <div class="code" id="code">
+                <span><img src="img/_/code.png"/></span>
+            </div>
+            <div class="erweima">
+                <img src="img/_/erweima.jpg" alt="">
+                <s></s>
+            </div>
+        </div>
+        <div class="fr">
+            <div class="sui-pagination pagination-large">
+                <ul>
+                    <li :class="{prev:true,disabled:search.page === 1}">
+                        <a href="#" @click.prevent="prePage">«上一页</a>
+                    </li>
+                    <li :class="{active : index(i) === search.page}" v-for="i in Math.min(5, totalPage)"
+                        :key="i">
+                        <a href="#" @click.prevent="search.page = index(i)">{{index(i)}}</a>
+                    </li>
+                    <li class="dotted" v-show="totalPage > 5"><span>...</span></li>
+                    <li :class="{next:true,disabled:search.page === totalPage}">
+                        <a href="#" @click.prevent="nextPage">下一页»</a>
+                    </li>
+                </ul>
+                <div><span>共{{totalPage}}页&nbsp;</span><span>
+      到第
+      <input type="text" class="page-num" v-model="pageNum">
+      页 <button class="page-confirm" @click.prevent="toPage">确定</button></span></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    let seckillIndexVm = new Vue({
+        el: '#seckillIndexApp',
+        data: {
+            search: {
+                key: "", // 搜索页面的关键字
+                page: 1, // 记录分页参数
+                // sortBy: ""
+            },
+            seckillList: [],
+            ly,
+            total: "",
+            totalPage: "",
+            pageNum: "",
+        },
+        created() {
+            const key = ly.getUrlParam("key");
+            const hash = ly.parse(location.hash.substring(1));
+
+            if (!key) {
+                return;
+            }
+
+            hash.key = key;
+            hash.page = hash.page ? parseInt(hash.page) : 1;
+            hash.filter = hash.filter || {};
+            this.search = hash;
+            this.loadData();
+        },
+        watch: {
+            "search.page": {
+                handler(val) {
+                    /* // 把search对象变成请求参数，拼接在url路径
+                     window.location.search = "?" + ly.stringify(this.search);*/
+                    // 把search对象中除了key以外的属性记录在obj对象中(解构表达式)
+                    const {key, ...obj} = this.search;
+                    // 把obj属性拼接在url路径的hash中
+                    window.location.hash = "#" + ly.stringify(obj);
+                    // 因为hash变化不引起刷新，需要手动调用loadData
+                    this.loadData();
+                }
+            },
+            "search.filter": {
+                handler(val) {
+                    // 把search对象中除了key以外的属性变成请求参数，
+                    const {key, ...obj} = this.search;
+                    // 拼接在url路径的hash中
+                    window.location.hash = "#" + ly.stringify(obj);
+                    // 因为hash变化不引起刷新，需要手动调用loadData
+                    this.getSeckillData();
+                }
+            }
+        },
+        methods: {
+            getSeckillData() {
+                ly.http.post("/seckill/page", this.search).then(resp => {
+                    if (resp.data.items.length === 0) {
+                        return;
+                    }
+                    this.total = resp.data.total;
+                    this.totalPage = resp.data.totalPage;
+                    this.seckillList = resp.data.items;
+                }).catch(error => {
+                    console.log(error.data);
+                });
+            },
+            prePage() {
+                if (this.search.page > 1) {
+                    this.search.page--;
+                }
+            },
+            nextPage() {
+                if (this.search.page < this.totalPage) {
+                    this.search.page++;
+                }
+            },
+            toPage() {
+                if (this.pageNum >= 1 && this.pageNum <= this.totalPage) {
+                    this.search.page = this.pageNum;
+                } else {
+                    alert("您输入的页数无效");
+                }
+            },
+            index(i) {
+                if (this.search.page <= 3 || this.totalPage <= 5) {
+                    // 当前页小于3，则页码就是从 i 开始
+                    return i;
+                } else if (this.search.page <= this.totalPage - 2) {
+                    // 大于3，则从page-2开始，然后逐个加1
+                    return this.search.page - 3 + i;
+                } else {
+                    return this.totalPage - 5 + i;
+                }
+            }
+        },
+        created() {
+            this.getSeckillData()
+        },
+        components: {
+            lyTop: () => import('/js/pages/top.js')
+        },
+        computed: {
+            rate(index) {
+                return (this.seckillList[index].soldNum * 100) / this.seckillList[index].quantity;
+            }
+        }
+    })
+</script>
+<!-- 底部栏位 -->
+<!--页面底部，由js动态加载-->
+<div class="clearfix footer"></div>
+<script type="text/javascript">$(".footer").load("foot.html");</script>
+<!--页面底部END-->
+
+</html>
